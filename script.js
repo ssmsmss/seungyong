@@ -19,7 +19,10 @@ let hideDone = false;  // true면 완료한 할 일을 목록에서 숨긴다
 function render() {
   const list = document.querySelector('#list');
   list.innerHTML = '';
-  items.forEach((item, i) => {
+  // 별표 단 것을 맨 위로 보낸다. 저장된 순서는 그대로 두고 그리는 순서만 바꾼다.
+  const order = items.map((item, i) => i).sort((a, b) => Number(!!items[b].star) - Number(!!items[a].star) || a - b);
+  order.forEach((i) => {
+    const item = items[i];
     if (hideDone && item.done) return;  // 숨기는 중이면 그리지 않는다 (i는 그대로라 체크·삭제는 맞는 항목에 적용된다)
     const li = document.createElement('li');
     if (item.done) li.classList.add('done');
@@ -60,7 +63,19 @@ function render() {
       li.append(due);
     }
 
-    li.append(del);
+    // 별표 버튼: 누르면 켜지고(노란색) 맨 위로 올라가며, 다시 누르면 꺼진다.
+    const star = document.createElement('button');
+    star.type = 'button';
+    star.className = item.star ? 'star on' : 'star';
+    star.textContent = item.star ? '★' : '☆';
+    star.setAttribute('aria-label', item.star ? '중요 표시 끄기' : '중요 표시 켜기');
+    star.addEventListener('click', () => {
+      items[i].star = !items[i].star;
+      save();
+      render();
+    });
+
+    li.append(star, del);
     list.append(li);
   });
   // 남은 개수 = 체크하지 않은 것
