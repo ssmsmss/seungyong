@@ -83,3 +83,11 @@ li.done { text-decoration: line-through; color: #9ca3af; }
 /* 긴 할 일 이름이 있어도 체크 칸과 삭제 버튼 모양이 찌그러지지 않게 한다 */
 #list input[type="checkbox"] { flex-shrink: 0; }
 #list li button { flex-shrink: 0; white-space: nowrap; }
+
+#toggle-done {
+  width: 100%;
+  margin-top: 8px;
+  color: #0f766e;
+  background: #ffffff;
+  border: 1px solid #0f766e;
+}

@@ -14,10 +14,13 @@ function addItem(text, category, due) {
   render();
 }
 
+let hideDone = false;  // true면 완료한 할 일을 목록에서 숨긴다
+
 function render() {
   const list = document.querySelector('#list');
   list.innerHTML = '';
   items.forEach((item, i) => {
+    if (hideDone && item.done) return;  // 숨기는 중이면 그리지 않는다 (i는 그대로라 체크·삭제는 맞는 항목에 적용된다)
     const li = document.createElement('li');
     if (item.done) li.classList.add('done');
 
@@ -74,6 +77,14 @@ button.addEventListener('click', () => {
   input.value = '';
   due.value = '';
   input.focus();
+});
+
+// 누를 때마다 완료한 할 일을 숨기거나 다시 보여 준다
+const toggleButton = document.querySelector('#toggle-done');
+toggleButton.addEventListener('click', () => {
+  hideDone = !hideDone;
+  toggleButton.textContent = hideDone ? '완료한 것 보이기' : '완료한 것 숨기기';
+  render();
 });
 
 // 입력칸에서 Enter를 눌러도 추가된다
