@@ -314,6 +314,14 @@ function taskRow(task) {
   });
 
   li.append(star);
+
+  // 메모가 있으면 카드 맨 아래에 보여 준다
+  if (task.note.trim() !== '') {
+    const memo = document.createElement('div');
+    memo.className = 'memo';
+    memo.textContent = task.note;
+    li.append(memo);
+  }
   return li;
 }
 
@@ -485,6 +493,7 @@ $('#note').addEventListener('input', () => {
   const task = state.tasks.find((t) => t.id === selectedId);
   if (!task) return;
   task.note = $('#note').value;
+  render();  // 카드 아래 메모도 바로 바뀐다 (메모 칸은 다시 만들지 않아서 커서가 그대로다)
   clearTimeout(noteTimer);
   noteTimer = setTimeout(() => saveTask(task), 500);
 });

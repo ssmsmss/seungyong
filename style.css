@@ -130,8 +130,10 @@ h2 { margin: 24px 0 0; font-size: 14px; font-weight: 600; }
 
 .tasks li {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 12px;
+  row-gap: 0;
   margin-bottom: 8px;
   padding: 8px 12px;
   background: var(--card);
@@ -147,6 +149,18 @@ button.title {
   border: none;
 }
 .tasks li.selected { border-color: var(--neon); }
+.memo {
+  flex: 0 0 100%;
+  margin: 0 0 4px 40px;
+  font-size: 14px;
+  color: var(--muted);
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
 li.done .title { color: var(--muted); text-decoration: line-through; }
 .due { font-family: var(--mono); font-size: 13px; color: var(--muted); white-space: nowrap; }
 
@@ -240,6 +254,7 @@ input[type="date"] { font-family: var(--mono); color-scheme: dark; }
   #detail-back { display: inline-block; }
   #back { display: inline-block; }
   .check { width: 32px; height: 32px; }
+  .memo { margin-left: 44px; }
   .star, .del, #steps .del, #detail-star { min-height: 44px; min-width: 44px; }
   #my-day-toggle, #due-clear, #sort, #delete-list { min-height: 44px; }
   .sort-item { min-height: 44px; }
