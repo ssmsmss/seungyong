@@ -1,4 +1,4 @@
-// 명세.md의 "왼쪽 메뉴와 내 목록" 부분: 기본 목록 4개 + 내가 만든 목록 + 새 목록 + 목록 삭제
+// 명세.md의 "왼쪽 메뉴와 내 목록" + "단계와 메모(오른쪽 세부 창)" 부분
 // 모든 내용은 이 브라우저 안(로컬 스토리지)에만 저장한다.
 
 const KEY = 'todo-app';
@@ -41,6 +41,11 @@ function load() {
 }
 
 let state = load();
+state.tasks.forEach((t) => {
+  t.steps = t.steps || [];
+  t.note = t.note || '';
+});
+let selectedId = null;  // 세부 창에 열어 둔 할 일 (저장하지 않는다)
 const $ = (selector) => document.querySelector(selector);
 
 function save() {
@@ -84,7 +89,7 @@ function defaultListId() {
 
 function addTask(title) {
   const id = currentId();
-  const task = { id: newId(), listId: smartOf(id) ? defaultListId() : id, title: title, done: false, star: false, due: '', myDay: '' };
+  const task = { id: newId(), listId: smartOf(id) ? defaultListId() : id, title: title, done: false, star: false, due: '', myDay: '', steps: [], note: '' };
   if (id === 'important') task.star = true;
   if (id === 'my-day') task.myDay = today();
   if (id === 'planned') task.due = today();
@@ -106,6 +111,7 @@ function menuItem(id, name) {
   button.append(label, count);
   button.addEventListener('click', () => {
     state.current = id;
+    selectedId = null;
     save();
     $('#app').dataset.screen = 'tasks';  // 좁은 화면에서는 할 일 칸으로 넘어간다
     render();
@@ -116,7 +122,7 @@ function menuItem(id, name) {
 
 function taskRow(task) {
   const li = document.createElement('li');
-  if (task.done) li.className = 'done';
+  li.className = (task.done ? 'done' : '') + (task.id === selectedId ? ' selected' : '');
 
   const check = document.createElement('button');
   check.type = 'button';
@@ -129,10 +135,24 @@ function taskRow(task) {
     render();
   });
 
-  const title = document.createElement('span');
+  // 제목을 누르면 오른쪽(좁은 화면에서는 다음 칸)에 세부 창이 열린다
+  const title = document.createElement('button');
+  title.type = 'button';
   title.className = 'title';
   title.textContent = task.title;
+  title.addEventListener('click', () => {
+    selectedId = task.id;
+    $('#app').dataset.screen = 'detail';
+    render();
+  });
   li.append(check, title);
+
+  if (task.steps.length > 0) {
+    const progress = document.createElement('span');
+    progress.className = 'due';
+    progress.textContent = '단계 ' + task.steps.filter((x) => x.done).length + '/' + task.steps.length;
+    li.append(progress);
+  }
 
   if (task.due) {
     const due = document.createElement('span');
@@ -153,19 +173,63 @@ function taskRow(task) {
     render();
   });
 
-  // 삭제 버튼은 세부 창을 만들 때 그곳으로 옮길 예정이다
-  const del = document.createElement('button');
-  del.type = 'button';
-  del.className = 'del';
-  del.textContent = '삭제';
-  del.addEventListener('click', () => {
-    state.tasks = state.tasks.filter((t) => t.id !== task.id);
-    save();
-    render();
-  });
-
-  li.append(star, del);
+  li.append(star);
   return li;
+}
+
+// 오른쪽 세부 창: 제목, 별, 단계, 메모, 삭제
+function renderDetail() {
+  const task = state.tasks.find((t) => t.id === selectedId);
+  if (!task) {
+    selectedId = null;
+    $('#detail').hidden = true;
+    $('#app').classList.remove('has-detail');
+    if ($('#app').dataset.screen === 'detail') $('#app').dataset.screen = 'tasks';
+    return;
+  }
+  $('#detail').hidden = false;
+  $('#app').classList.add('has-detail');
+
+  if ($('#detail-title').value !== task.title) $('#detail-title').value = task.title;
+  if ($('#note').value !== task.note) $('#note').value = task.note;
+  $('#detail-star').textContent = task.star ? '★' : '☆';
+  $('#detail-star').className = 'star' + (task.star ? ' on' : '');
+  $('#detail-star').setAttribute('aria-label', task.star ? '중요 표시 끄기' : '중요 표시 켜기');
+
+  $('#steps').innerHTML = '';
+  task.steps.forEach((step) => {
+    const li = document.createElement('li');
+    if (step.done) li.className = 'done';
+
+    const check = document.createElement('button');
+    check.type = 'button';
+    check.className = 'check';
+    check.textContent = step.done ? '✓' : '';
+    check.setAttribute('aria-label', step.done ? '단계 완료 취소' : '단계 완료');
+    check.addEventListener('click', () => {
+      step.done = !step.done;
+      save();
+      render();
+    });
+
+    const title = document.createElement('span');
+    title.className = 'title';
+    title.textContent = step.title;
+
+    const del = document.createElement('button');
+    del.type = 'button';
+    del.className = 'del';
+    del.textContent = '✕';
+    del.setAttribute('aria-label', '단계 삭제');
+    del.addEventListener('click', () => {
+      task.steps = task.steps.filter((x) => x.id !== step.id);
+      save();
+      render();
+    });
+
+    li.append(check, title, del);
+    $('#steps').append(li);
+  });
 }
 
 function render() {
@@ -194,7 +258,63 @@ function render() {
   $('#empty').hidden = all.length > 0;
   $('#done-title').hidden = done.length === 0;
   $('#done-count').textContent = done.length;
+
+  renderDetail();
 }
+
+// 세부 창: 제목 고치기 (Enter나 다른 곳 누르면 저장, 비어 있으면 원래대로)
+$('#detail-title').addEventListener('change', () => {
+  const task = state.tasks.find((t) => t.id === selectedId);
+  const title = $('#detail-title').value.trim();
+  if (task && title !== '') task.title = title;
+  save();
+  render();
+});
+$('#detail-title').addEventListener('keydown', (event) => {
+  if (event.key === 'Enter' && !event.isComposing) $('#detail-title').blur();
+});
+
+$('#detail-star').addEventListener('click', () => {
+  const task = state.tasks.find((t) => t.id === selectedId);
+  if (!task) return;
+  task.star = !task.star;
+  save();
+  render();
+});
+
+// 단계 추가: Enter
+$('#new-step').addEventListener('keydown', (event) => {
+  if (event.key !== 'Enter' || event.isComposing) return;
+  const task = state.tasks.find((t) => t.id === selectedId);
+  const title = $('#new-step').value.trim();
+  if (!task || title === '') return;  // 빈 칸이면 멈춘다
+  task.steps.push({ id: newId(), title: title, done: false });
+  $('#new-step').value = '';
+  save();
+  render();
+});
+
+// 메모: 적는 대로 바로 저장 (다시 그리지 않아서 글 쓰는 중에 커서가 튀지 않는다)
+$('#note').addEventListener('input', () => {
+  const task = state.tasks.find((t) => t.id === selectedId);
+  if (!task) return;
+  task.note = $('#note').value;
+  save();
+});
+
+$('#delete-task').addEventListener('click', () => {
+  state.tasks = state.tasks.filter((t) => t.id !== selectedId);
+  selectedId = null;
+  save();
+  render();
+});
+
+// 좁은 화면에서 세부 창을 닫고 할 일 칸으로 돌아가기
+$('#detail-back').addEventListener('click', () => {
+  selectedId = null;
+  $('#app').dataset.screen = 'tasks';
+  render();
+});
 
 // 작업 추가: Enter
 $('#item').addEventListener('keydown', (event) => {

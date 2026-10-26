@@ -26,6 +26,18 @@
       <h2 id="done-title">완료됨 (<span id="done-count">0</span>)</h2>
       <ul id="done-list"></ul>
     </main>
+
+    <aside class="detail" id="detail" hidden aria-label="세부 창">
+      <button id="detail-back" type="button">← 돌아가기</button>
+      <div class="title-row">
+        <input id="detail-title" aria-label="제목">
+        <button id="detail-star" type="button">☆</button>
+      </div>
+      <ul id="steps"></ul>
+      <input id="new-step" placeholder="단계 추가" aria-label="단계 추가">
+      <textarea id="note" placeholder="메모 추가" aria-label="메모" rows="5"></textarea>
+      <button id="delete-task" type="button">할 일 삭제</button>
+    </aside>
   </div>
   <script src="script.js"></script>
 </body>

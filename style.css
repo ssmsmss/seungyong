@@ -31,6 +31,7 @@ ul { list-style: none; margin: 0; padding: 0; }
   grid-template-columns: 260px 1fr;
   min-height: 100vh;
 }
+.app.has-detail { grid-template-columns: 260px 1fr 340px; }
 
 .menu {
   padding: 24px 16px;
@@ -57,7 +58,7 @@ ul { list-style: none; margin: 0; padding: 0; }
 #smart-lists { padding-bottom: 12px; margin-bottom: 12px; border-bottom: 1px solid var(--line); }
 #my-lists { margin-bottom: 12px; }
 
-input {
+input, textarea {
   width: 100%;
   padding: 12px;
   font: inherit;
@@ -66,7 +67,7 @@ input {
   border: 1px solid var(--line);
   border-radius: 6px;
 }
-input:focus { outline: none; border-color: var(--neon); box-shadow: 0 0 8px var(--glow); }
+input:focus, textarea:focus { outline: none; border-color: var(--neon); box-shadow: 0 0 8px var(--glow); }
 
 /* 가운데: 할 일 */
 .tasks {
@@ -104,6 +105,14 @@ h2 { margin: 24px 0 8px; font-size: 14px; font-weight: 600; color: var(--muted);
   border-radius: 8px;
 }
 .tasks .title { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+button.title {
+  min-height: 36px;
+  padding: 0;
+  text-align: left;
+  background: none;
+  border: none;
+}
+.tasks li.selected { border-color: var(--neon); }
 li.done .title { color: var(--muted); text-decoration: line-through; }
 .due { font-family: var(--mono); font-size: 13px; color: var(--muted); white-space: nowrap; }
 
@@ -121,7 +130,7 @@ li.done .title { color: var(--muted); text-decoration: line-through; }
 .check:hover { border-color: var(--neon); }
 li.done .check { background: var(--neon); border-color: var(--neon); }
 
-.star, .del {
+.star, .del, #detail-star {
   flex-shrink: 0;
   min-height: 36px;
   padding: 4px 10px;
@@ -131,18 +140,49 @@ li.done .check { background: var(--neon); border-color: var(--neon); }
   color: var(--muted);
   white-space: nowrap;
 }
-.star { font-size: 18px; line-height: 1; }
-.star.on { color: var(--neon); border-color: var(--neon); }
+.star, #detail-star { font-size: 18px; line-height: 1; }
+.star.on, #detail-star.on { color: var(--neon); border-color: var(--neon); }
 .star:hover, .del:hover { border-color: var(--muted); color: var(--text); }
 .star.on:hover { color: var(--neon); }
 
+/* 오른쪽: 세부 창 */
+.detail {
+  padding: 24px 16px;
+  border-left: 1px solid var(--line);
+}
+.detail .title-row input { font-size: 20px; font-weight: 600; }
+#steps { margin: 16px 0 8px; }
+#steps li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--line);
+}
+#steps .title { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+#steps li.done .title { color: var(--muted); text-decoration: line-through; }
+#steps .check { width: 22px; height: 22px; font-size: 13px; }
+#steps .del { min-height: 32px; padding: 2px 8px; font-size: 14px; }
+#note { display: block; margin: 16px 0; resize: vertical; font-size: 16px; }
+#delete-task, #detail-back {
+  padding: 8px 12px;
+  color: var(--muted);
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+#detail-back { display: none; margin-bottom: 12px; }
+
 /* 좁은 화면(휴대폰): 한 번에 한 칸만 보인다 */
 @media (max-width: 700px) {
-  .app { grid-template-columns: 1fr; }
+  .app, .app.has-detail { grid-template-columns: 1fr; }
   .menu { border-right: none; }
-  .app[data-screen="menu"] .tasks { display: none; }
-  .app[data-screen="tasks"] .menu { display: none; }
+  .app[data-screen="menu"] .tasks, .app[data-screen="menu"] .detail { display: none; }
+  .app[data-screen="tasks"] .menu, .app[data-screen="tasks"] .detail { display: none; }
+  .app[data-screen="detail"] .menu, .app[data-screen="detail"] .tasks { display: none; }
+  .detail { border-left: none; }
+  #detail-back { display: inline-block; }
   #back { display: inline-block; }
   .check { width: 32px; height: 32px; }
-  .star, .del { min-height: 44px; min-width: 44px; }
+  .star, .del, #steps .del, #detail-star { min-height: 44px; min-width: 44px; }
 }
