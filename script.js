@@ -240,14 +240,30 @@ function toggleDone(task) {
   }
 }
 
+// 메뉴 아이콘 (직접 그린 선 그림이라 따로 불러올 것이 없다)
+const ICONS = {
+  'my-day': '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+  important: '<path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/>',
+  planned: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+  all: '<path d="M3 11l9-8 9 8M5 10v10h14V10"/>',
+  list: '<path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01"/>',
+};
+
 function menuItem(id, name) {
   const li = document.createElement('li');
   const button = document.createElement('button');
   button.type = 'button';
   button.className = 'menu-item' + (id === currentId() ? ' active' : '');
+  button.dataset.list = smartOf(id) ? id : 'mine';
 
+  const icon = document.createElement('span');
+  icon.className = 'icon';
+  icon.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true">' + (ICONS[id] || ICONS.list) + '</svg>';
+  const labelText = document.createElement('span');
+  labelText.textContent = name;
   const label = document.createElement('span');
-  label.textContent = name;
+  label.className = 'menu-label';
+  label.append(icon, labelText);
   const count = document.createElement('span');
   count.className = 'count';
   count.textContent = remaining(id);
@@ -396,6 +412,9 @@ function render() {
   const smart = smartOf(id);
   $('#list-title').textContent = smart ? smart.name : listOf(id).name;
   $('#delete-list').hidden = !!smart;  // 기본 목록은 지울 수 없다
+  // 오늘 하루에서는 제목 아래에 오늘 날짜를 보여 준다
+  $('#list-sub').hidden = id !== 'my-day';
+  $('#list-sub').textContent = new Date().toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'long' });
 
   const all = tasksOf(id);
   const open = all.filter((t) => !t.done);

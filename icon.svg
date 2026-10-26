@@ -1,10 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="To Do">
-  <rect x="1.5" y="1.5" width="61" height="61" rx="14" fill="#121216" stroke="#19f0d2" stroke-width="3"/>
-  <circle cx="21" cy="21" r="6" fill="#19f0d2"/>
-  <path d="M18 21.2l2.2 2.3 4-4.4" fill="none" stroke="#0a0a0c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-  <rect x="32" y="19" width="19" height="4" rx="2" fill="#19f0d2"/>
-  <circle cx="21" cy="32.5" r="5" fill="none" stroke="#8a8a94" stroke-width="2"/>
-  <rect x="32" y="30.5" width="19" height="4" rx="2" fill="#8a8a94"/>
-  <circle cx="21" cy="44" r="5" fill="none" stroke="#8a8a94" stroke-width="2"/>
-  <rect x="32" y="42" width="19" height="4" rx="2" fill="#8a8a94"/>
+  <rect x="1.5" y="1.5" width="61" height="61" rx="14" fill="#ffffff" stroke="#2564cf" stroke-width="3"/>
+  <circle cx="21" cy="21" r="6" fill="#2564cf"/>
+  <path d="M18 21.2l2.2 2.3 4-4.4" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="32" y="19" width="19" height="4" rx="2" fill="#2564cf"/>
+  <circle cx="21" cy="32.5" r="5" fill="none" stroke="#a19f9d" stroke-width="2"/>
+  <rect x="32" y="30.5" width="19" height="4" rx="2" fill="#a19f9d"/>
+  <circle cx="21" cy="44" r="5" fill="none" stroke="#a19f9d" stroke-width="2"/>
+  <rect x="32" y="42" width="19" height="4" rx="2" fill="#a19f9d"/>
 </svg>
