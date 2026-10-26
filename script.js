@@ -297,8 +297,14 @@ function taskRow(task) {
   title.className = 'title';
   title.textContent = task.title;
   title.addEventListener('click', () => {
-    selectedId = task.id;
-    $('#app').dataset.screen = 'detail';
+    if (selectedId === task.id) {
+      // 열려 있는 카드를 다시 누르면 세부 창을 닫는다
+      selectedId = null;
+      $('#app').dataset.screen = 'tasks';
+    } else {
+      selectedId = task.id;
+      $('#app').dataset.screen = 'detail';
+    }
     render();
   });
   li.append(check, title);
@@ -526,6 +532,15 @@ $('#note').addEventListener('change', () => {
 $('#delete-task').addEventListener('click', () => {
   removeTask(selectedId);
   selectedId = null;
+  render();
+});
+
+// 빈 공간(카드·버튼·입력칸·메뉴·세부 창이 아닌 곳)을 누르면 세부 창을 닫는다
+document.addEventListener('click', (event) => {
+  if (!selectedId) return;
+  if (event.target.closest('.detail, .menu, li, button, input, select, textarea, label, a')) return;
+  selectedId = null;
+  if ($('#app').dataset.screen === 'detail') $('#app').dataset.screen = 'tasks';
   render();
 });
 
