@@ -102,3 +102,28 @@ li.done { text-decoration: line-through; color: #9ca3af; }
 }
 #list li .star.on { color: #f5b800; border-color: #f5b800; }
 #list li .star + button { margin-left: 0; }
+
+/* 어두운 화면 (맨 위 버튼으로 켜고 끈다) */
+#theme-toggle {
+  float: right;
+  padding: 6px 12px;
+  font-size: 14px;
+  color: #0f766e;
+  background: #ffffff;
+  border: 1px solid #0f766e;
+}
+
+body.dark { background: #111827; color: #e5e7eb; color-scheme: dark; }
+body.dark h1 { color: #5eead4; }
+body.dark #item,
+body.dark #category,
+body.dark #due { background: #1f2937; color: #e5e7eb; border-color: #374151; }
+body.dark #theme-toggle,
+body.dark #toggle-done,
+body.dark #list li button { background: #111827; color: #5eead4; border-color: #5eead4; }
+body.dark #list li { border-bottom-color: #374151; }
+body.dark #list .tag { background: #134e4a; color: #99f6e4; }
+body.dark #list .due { color: #9ca3af; }
+body.dark li.done { color: #6b7280; }
+body.dark #list li .star { color: #6b7280; border-color: #4b5563; }
+body.dark #list li .star.on { color: #fbbf24; border-color: #fbbf24; }

@@ -102,6 +102,19 @@ toggleButton.addEventListener('click', () => {
   render();
 });
 
+// 누를 때마다 어두운 화면과 밝은 화면을 바꾼다. 고른 화면은 이 브라우저에 기억한다.
+const themeButton = document.querySelector('#theme-toggle');
+function applyTheme(dark) {
+  document.body.classList.toggle('dark', dark);
+  themeButton.textContent = dark ? '밝은 화면' : '어두운 화면';
+}
+applyTheme(localStorage.getItem('todo-theme') === 'dark');
+themeButton.addEventListener('click', () => {
+  const dark = !document.body.classList.contains('dark');
+  localStorage.setItem('todo-theme', dark ? 'dark' : 'light');
+  applyTheme(dark);
+});
+
 // 입력칸에서 Enter를 눌러도 추가된다
 document.querySelector('#item').addEventListener('keydown', (event) => {
   if (event.key === 'Enter' && !event.isComposing) button.click();
