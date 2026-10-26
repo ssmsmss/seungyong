@@ -1,0 +1,94 @@
+/* 클린 미니멀: 흰 바탕, 1px 회색 선, 검은 버튼, 넉넉한 여백, 작은 둥근 모서리 */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 32px 16px;
+  background: #fff;
+  color: #111;
+  font-family: system-ui, -apple-system, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+h1 {
+  margin: 0 0 24px;
+  font-size: 24px;
+  font-weight: 600;
+}
+
+#todo-input {
+  width: 100%;
+  margin-bottom: 12px;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font: inherit;
+  color: inherit;
+  background: #fff;
+}
+
+#todo-input:focus {
+  outline: none;
+  border-color: #111;
+}
+
+button {
+  padding: 10px 16px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background: #fff;
+  color: #111;
+  font: inherit;
+  cursor: pointer;
+}
+
+#add-button {
+  width: 100%;
+  border-color: #111;
+  background: #111;
+  color: #fff;
+}
+
+#todo-list {
+  margin: 24px 0 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid #ddd;
+}
+
+#todo-list li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 0;
+  border-bottom: 1px solid #ddd;
+}
+
+#todo-list input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  accent-color: #111;
+}
+
+#todo-list span {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+#todo-list button {
+  padding: 6px 12px;
+  font-size: 14px;
+  color: #666;
+}
+
+#empty-message {
+  margin-top: 24px;
+  color: #888;
+  text-align: center;
+}
