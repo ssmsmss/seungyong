@@ -7,11 +7,26 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1>오늘 할 일</h1>
-  <input id="item" placeholder="살 것 적기">
-  <button id="add" type="button">추가</button>
-  <ul id="list"></ul>
-  <p>남은 개수: <span id="count">0</span></p>
+  <div class="app" id="app" data-screen="menu">
+    <nav class="menu" aria-label="목록">
+      <ul id="smart-lists"></ul>
+      <ul id="my-lists"></ul>
+      <input id="new-list" placeholder="새 목록" aria-label="새 목록 이름">
+    </nav>
+
+    <main class="tasks">
+      <button id="back" type="button">← 목록</button>
+      <div class="title-row">
+        <h1 id="list-title"></h1>
+        <button id="delete-list" type="button">목록 삭제</button>
+      </div>
+      <input id="item" placeholder="작업 추가" aria-label="작업 추가">
+      <p id="empty">할 일이 없어요</p>
+      <ul id="list"></ul>
+      <h2 id="done-title">완료됨 (<span id="done-count">0</span>)</h2>
+      <ul id="done-list"></ul>
+    </main>
+  </div>
   <script src="script.js"></script>
 </body>
 </html>
