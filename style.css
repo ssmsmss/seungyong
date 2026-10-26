@@ -102,6 +102,23 @@ button {
   color: var(--muted);
 }
 
+button {
+  transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+}
+
+/* 마우스를 올렸을 때 색이 살짝 바뀐다 (마우스가 있는 기기에서만) */
+@media (hover: hover) {
+  button:hover {
+    border-color: #4a4a55;
+    background: #1c1c22;
+    color: var(--text);
+  }
+
+  #add-button:hover {
+    background: rgba(25, 240, 210, 0.12);
+  }
+}
+
 #empty-message {
   margin-top: 24px;
   color: var(--muted);
