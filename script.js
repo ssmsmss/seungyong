@@ -39,7 +39,11 @@ function render() {
       render();
     });
 
-    const text = document.createTextNode(" " + todo.text + " ");
+    const text = document.createElement("span");
+    text.textContent = todo.text;
+    text.addEventListener("dblclick", function () {
+      startEdit(text, index);
+    });
 
     const deleteButton = document.createElement("button");
     deleteButton.type = "button";
@@ -57,6 +61,42 @@ function render() {
   count.textContent = todos.filter(function (todo) {
     return !todo.done;
   }).length;
+}
+
+// 글자를 두 번 누르면 글 칸으로 바뀐다. Enter나 다른 곳 누르기는 저장, Esc는 취소.
+function startEdit(text, index) {
+  const editor = document.createElement("input");
+  editor.type = "text";
+  editor.value = todos[index].text;
+  let finished = false;
+
+  function finish(saveIt) {
+    if (finished) {
+      return;
+    }
+    finished = true;
+    const value = editor.value.trim();
+    if (saveIt && value !== "") {
+      todos[index].text = value;
+      save();
+    }
+    render();
+  }
+
+  editor.addEventListener("keydown", function (event) {
+    if (event.key === "Enter") {
+      finish(true);
+    } else if (event.key === "Escape") {
+      finish(false);
+    }
+  });
+  editor.addEventListener("blur", function () {
+    finish(true);
+  });
+
+  text.replaceWith(editor);
+  editor.focus();
+  editor.select();
 }
 
 addButton.addEventListener("click", function () {
