@@ -8,29 +8,16 @@ function save() {
   localStorage.setItem(KEY, JSON.stringify(items));
 }
 
-function addItem(text, category, due) {
-  items.push({ text: text, category: category, due: due, done: false });  // 목록 맨 아래에
+function addItem(text) {
+  items.push({ text: text, done: false });  // 목록 맨 아래에
   save();
   render();
 }
 
-let hideDone = false;  // true면 완료한 할 일을 목록에서 숨긴다
-
 function render() {
   const list = document.querySelector('#list');
   list.innerHTML = '';
-  // 순서: 별표 단 것 → 마감일이 가까운 것 → 마감일 없는 것(추가한 순서). 저장된 순서는 그대로 두고 그리는 순서만 바꾼다.
-  const byDue = (a, b) => {
-    if (!a.due && !b.due) return 0;
-    if (!a.due) return 1;
-    if (!b.due) return -1;
-    return a.due < b.due ? -1 : a.due > b.due ? 1 : 0;  // 2026-10-30처럼 쓴 날짜는 글자 순서가 곧 날짜 순서다
-  };
-  const order = items.map((item, i) => i).sort((a, b) =>
-    Number(!!items[b].star) - Number(!!items[a].star) || byDue(items[a], items[b]) || a - b);
-  order.forEach((i) => {
-    const item = items[i];
-    if (hideDone && item.done) return;  // 숨기는 중이면 그리지 않는다 (i는 그대로라 체크·삭제는 맞는 항목에 적용된다)
+  items.forEach((item, i) => {
     const li = document.createElement('li');
     if (item.done) li.classList.add('done');
 
@@ -55,34 +42,7 @@ function render() {
       render();
     });
 
-    const tag = document.createElement('span');
-    tag.className = 'tag';
-    tag.textContent = item.category || '기타';  // 분류 없이 저장된 옛 할 일은 기타로 보인다
-
-    li.append(check, label, tag);
-
-    // 마감일은 비워 둘 수 있다. 있으면 "10/30 마감"처럼 보여 준다.
-    if (item.due) {
-      const [, month, day] = item.due.split('-');
-      const due = document.createElement('span');
-      due.className = 'due';
-      due.textContent = Number(month) + '/' + Number(day) + ' 마감';
-      li.append(due);
-    }
-
-    // 별표 버튼: 누르면 켜지고(노란색) 맨 위로 올라가며, 다시 누르면 꺼진다.
-    const star = document.createElement('button');
-    star.type = 'button';
-    star.className = item.star ? 'star on' : 'star';
-    star.textContent = item.star ? '★' : '☆';
-    star.setAttribute('aria-label', item.star ? '중요 표시 끄기' : '중요 표시 켜기');
-    star.addEventListener('click', () => {
-      items[i].star = !items[i].star;
-      save();
-      render();
-    });
-
-    li.append(star, del);
+    li.append(check, label, del);
     list.append(li);
   });
   // 남은 개수 = 체크하지 않은 것
@@ -94,32 +54,9 @@ button.addEventListener('click', () => {
   const input = document.querySelector('#item');
   const text = input.value.trim();
   if (text === '') return;   // 빈 칸이면 멈춘다
-  const due = document.querySelector('#due');
-  addItem(text, document.querySelector('#category').value, due.value);  // 고른 분류·마감일과 함께 목록에 추가한다
+  addItem(text);             // 목록에 추가한다
   input.value = '';
-  due.value = '';
   input.focus();
-});
-
-// 누를 때마다 완료한 할 일을 숨기거나 다시 보여 준다
-const toggleButton = document.querySelector('#toggle-done');
-toggleButton.addEventListener('click', () => {
-  hideDone = !hideDone;
-  toggleButton.textContent = hideDone ? '완료한 것 보이기' : '완료한 것 숨기기';
-  render();
-});
-
-// 누를 때마다 어두운 화면과 밝은 화면을 바꾼다. 고른 화면은 이 브라우저에 기억한다.
-const themeButton = document.querySelector('#theme-toggle');
-function applyTheme(dark) {
-  document.body.classList.toggle('dark', dark);
-  themeButton.textContent = dark ? '밝은 화면' : '어두운 화면';
-}
-applyTheme(localStorage.getItem('todo-theme') === 'dark');
-themeButton.addEventListener('click', () => {
-  const dark = !document.body.classList.contains('dark');
-  localStorage.setItem('todo-theme', dark ? 'dark' : 'light');
-  applyTheme(dark);
 });
 
 // 입력칸에서 Enter를 눌러도 추가된다
