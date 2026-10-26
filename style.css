@@ -1,4 +1,14 @@
-/* 클린 미니멀 + 노란색 계열: 연노랑 바탕, 1px 노란 선, 진노랑 버튼, 넉넉한 여백, 작은 둥근 모서리 */
+/* 네온 다크: 거의 검은 바탕, 얇은 선의 카드, 청록 네온 강조 하나, 숫자는 고정폭 글꼴 */
+:root {
+  --bg: #0a0a0c;
+  --card: #121216;
+  --line: #2a2a31;
+  --text: #e8e8ec;
+  --muted: #8a8a94;
+  --neon: #19f0d2;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, "Courier New", monospace;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -7,8 +17,8 @@ body {
   max-width: 480px;
   margin: 0 auto;
   padding: 32px 16px;
-  background: #fffbe6;
-  color: #3b3000;
+  background: var(--bg);
+  color: var(--text);
   font-family: system-ui, -apple-system, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
   font-size: 16px;
   line-height: 1.5;
@@ -24,72 +34,77 @@ h1 {
   width: 100%;
   margin-bottom: 12px;
   padding: 12px;
-  border: 1px solid #ecd98a;
+  border: 1px solid var(--line);
   border-radius: 6px;
   font: inherit;
   color: inherit;
-  background: #fffef7;
+  background: var(--card);
 }
 
 #todo-input:focus {
   outline: none;
-  border-color: #d4a700;
+  border-color: var(--neon);
+  box-shadow: 0 0 8px rgba(25, 240, 210, 0.45);
 }
 
 button {
   padding: 10px 16px;
-  border: 1px solid #ecd98a;
+  border: 1px solid var(--line);
   border-radius: 6px;
-  background: #fffef7;
-  color: #3b3000;
+  background: var(--card);
+  color: var(--text);
   font: inherit;
   cursor: pointer;
 }
 
 #add-button {
   width: 100%;
-  border-color: #d4a700;
-  background: #f5c518;
-  color: #3b3000;
+  border-color: var(--neon);
+  background: transparent;
+  color: var(--neon);
+  box-shadow: 0 0 8px rgba(25, 240, 210, 0.45);
 }
 
 #todo-list {
   margin: 24px 0 0;
   padding: 0;
   list-style: none;
-  border-top: 1px solid #ecd98a;
 }
 
 #todo-list li {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 14px 0;
-  border-bottom: 1px solid #ecd98a;
+  margin-bottom: 12px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--card);
 }
 
 #todo-list input[type="checkbox"] {
   width: 20px;
   height: 20px;
   flex-shrink: 0;
-  accent-color: #d4a700;
+  accent-color: var(--neon);
 }
 
 #todo-list span {
   flex: 1;
   min-width: 0;
   overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums;
 }
 
 #todo-list button {
   padding: 6px 12px;
   font-size: 14px;
-  color: #7a6a1f;
+  color: var(--muted);
 }
 
 #empty-message {
   margin-top: 24px;
-  color: #7a6a1f;
+  color: var(--muted);
   text-align: center;
 }
 
