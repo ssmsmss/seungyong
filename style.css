@@ -21,7 +21,7 @@ body {
   line-height: 1.5;
 }
 
-button { font: inherit; color: inherit; cursor: pointer; }
+button { font: inherit; color: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent; }
 ul { list-style: none; margin: 0; padding: 0; }
 [hidden] { display: none !important; }
 
@@ -163,6 +163,28 @@ li.done .check { background: var(--neon); border-color: var(--neon); }
 #steps li.done .title { color: var(--muted); text-decoration: line-through; }
 #steps .check { width: 22px; height: 22px; font-size: 13px; }
 #steps .del { min-height: 32px; padding: 2px 8px; font-size: 14px; }
+#my-day-toggle, #due-clear {
+  padding: 8px 12px;
+  color: var(--text);
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+#my-day-toggle { width: 100%; margin: 8px 0; text-align: left; }
+#my-day-toggle:hover, #due-clear:hover { border-color: var(--neon); }
+.field { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.field label { flex-shrink: 0; width: 56px; color: var(--muted); }
+.field input, .field select { flex: 1; min-width: 0; }
+select {
+  padding: 12px;
+  font: inherit;
+  color: inherit;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+select:focus { outline: none; border-color: var(--neon); box-shadow: 0 0 8px var(--glow); }
+input[type="date"] { font-family: var(--mono); color-scheme: dark; }
 #note { display: block; margin: 16px 0; resize: vertical; font-size: 16px; }
 #delete-task, #detail-back {
   padding: 8px 12px;
@@ -185,4 +207,5 @@ li.done .check { background: var(--neon); border-color: var(--neon); }
   #back { display: inline-block; }
   .check { width: 32px; height: 32px; }
   .star, .del, #steps .del, #detail-star { min-height: 44px; min-width: 44px; }
+  #my-day-toggle, #due-clear { min-height: 44px; }
 }

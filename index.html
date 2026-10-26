@@ -35,6 +35,23 @@
       </div>
       <ul id="steps"></ul>
       <input id="new-step" placeholder="단계 추가" aria-label="단계 추가">
+      <button id="my-day-toggle" type="button">오늘 하루에 추가</button>
+      <div class="field">
+        <label for="due">마감일</label>
+        <input id="due" type="date">
+        <button id="due-clear" type="button">지우기</button>
+      </div>
+      <div class="field">
+        <label for="repeat">반복</label>
+        <select id="repeat">
+          <option value="">안 함</option>
+          <option value="daily">매일</option>
+          <option value="weekdays">평일</option>
+          <option value="weekly">매주</option>
+          <option value="monthly">매월</option>
+          <option value="yearly">매년</option>
+        </select>
+      </div>
       <textarea id="note" placeholder="메모 추가" aria-label="메모" rows="5"></textarea>
       <button id="delete-task" type="button">할 일 삭제</button>
     </aside>

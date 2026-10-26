@@ -1,4 +1,4 @@
-// 명세.md의 "왼쪽 메뉴와 내 목록" + "단계와 메모(오른쪽 세부 창)" 부분
+// 명세.md의 "왼쪽 메뉴와 내 목록" + "단계와 메모(오른쪽 세부 창)" + "마감일과 반복" 부분
 // 모든 내용은 이 브라우저 안(로컬 스토리지)에만 저장한다.
 
 const KEY = 'todo-app';
@@ -14,6 +14,46 @@ const SMART = [
 function today() {
   const d = new Date();
   return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+
+// "2026-10-30" 같은 글자 ↔ 날짜 바꾸기
+function toDate(text) {
+  const [y, m, d] = text.split('-').map(Number);
+  return new Date(y, m - 1, d);
+}
+
+function toText(date) {
+  return date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0') + '-' + String(date.getDate()).padStart(2, '0');
+}
+
+// 반복 규칙대로 times번 뒤로 간 날짜 (달·해가 뒤로 갈 때 그 달에 없는 날이면 마지막 날로)
+function stepDate(text, repeat, times) {
+  const date = toDate(text);
+  const day = date.getDate();
+  if (repeat === 'daily') {
+    date.setDate(day + times);
+  } else if (repeat === 'weekdays') {
+    for (let i = 0; i < times; i++) {
+      date.setDate(date.getDate() + 1);
+      while (date.getDay() === 0 || date.getDay() === 6) date.setDate(date.getDate() + 1);
+    }
+  } else if (repeat === 'weekly') {
+    date.setDate(day + 7 * times);
+  } else if (repeat === 'monthly' || repeat === 'yearly') {
+    date.setDate(1);
+    date.setMonth(date.getMonth() + (repeat === 'monthly' ? times : 12 * times));
+    const last = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+    date.setDate(Math.min(day, last));
+  }
+  return toText(date);
+}
+
+// 완료한 반복 할 일의 다음 마감일: 오늘보다 뒤가 되는 첫 번째 날짜
+function nextDue(task) {
+  const base = task.due || today();
+  let times = 1;
+  while (stepDate(base, task.repeat, times) <= today()) times++;
+  return stepDate(base, task.repeat, times);
 }
 
 function newId() {
@@ -44,6 +84,7 @@ let state = load();
 state.tasks.forEach((t) => {
   t.steps = t.steps || [];
   t.note = t.note || '';
+  t.repeat = t.repeat || '';
 });
 let selectedId = null;  // 세부 창에 열어 둔 할 일 (저장하지 않는다)
 const $ = (selector) => document.querySelector(selector);
@@ -89,11 +130,33 @@ function defaultListId() {
 
 function addTask(title) {
   const id = currentId();
-  const task = { id: newId(), listId: smartOf(id) ? defaultListId() : id, title: title, done: false, star: false, due: '', myDay: '', steps: [], note: '' };
+  const task = { id: newId(), listId: smartOf(id) ? defaultListId() : id, title: title, done: false, star: false, due: '', myDay: '', steps: [], note: '', repeat: '' };
   if (id === 'important') task.star = true;
   if (id === 'my-day') task.myDay = today();
   if (id === 'planned') task.due = today();
   state.tasks.push(task);
+}
+
+// 체크 누르기: 반복이 있는 할 일을 완료하면 다음 날짜로 같은 할 일이 새로 생긴다 (한 번만)
+function toggleDone(task) {
+  task.done = !task.done;
+  if (task.done && task.repeat && !task.spawned) {
+    task.spawned = true;
+    state.tasks.push({
+      id: newId(),
+      listId: task.listId,
+      title: task.title,
+      done: false,
+      star: task.star,
+      due: nextDue(task),
+      myDay: '',
+      steps: task.steps.map((x) => ({ id: newId(), title: x.title, done: false })),
+      note: task.note,
+      repeat: task.repeat,
+    });
+  }
+  save();
+  render();
 }
 
 function menuItem(id, name) {
@@ -129,11 +192,7 @@ function taskRow(task) {
   check.className = 'check';
   check.textContent = task.done ? '✓' : '';
   check.setAttribute('aria-label', task.done ? '완료 취소' : '완료');
-  check.addEventListener('click', () => {
-    task.done = !task.done;
-    save();
-    render();
-  });
+  check.addEventListener('click', () => toggleDone(task));
 
   // 제목을 누르면 오른쪽(좁은 화면에서는 다음 칸)에 세부 창이 열린다
   const title = document.createElement('button');
@@ -158,7 +217,7 @@ function taskRow(task) {
     const due = document.createElement('span');
     due.className = 'due';
     const [, month, day] = task.due.split('-');
-    due.textContent = Number(month) + '/' + Number(day);
+    due.textContent = Number(month) + '/' + Number(day) + (task.repeat ? ' ↻' : '');
     li.append(due);
   }
 
@@ -192,6 +251,9 @@ function renderDetail() {
 
   if ($('#detail-title').value !== task.title) $('#detail-title').value = task.title;
   if ($('#note').value !== task.note) $('#note').value = task.note;
+  $('#due').value = task.due;
+  $('#repeat').value = task.repeat;
+  $('#my-day-toggle').textContent = task.myDay === today() ? '오늘 하루에서 빼기' : '오늘 하루에 추가';
   $('#detail-star').textContent = task.star ? '★' : '☆';
   $('#detail-star').className = 'star' + (task.star ? ' on' : '');
   $('#detail-star').setAttribute('aria-label', task.star ? '중요 표시 끄기' : '중요 표시 켜기');
@@ -290,6 +352,41 @@ $('#new-step').addEventListener('keydown', (event) => {
   if (!task || title === '') return;  // 빈 칸이면 멈춘다
   task.steps.push({ id: newId(), title: title, done: false });
   $('#new-step').value = '';
+  save();
+  render();
+});
+
+// 오늘 하루에 넣고 빼기
+$('#my-day-toggle').addEventListener('click', () => {
+  const task = state.tasks.find((t) => t.id === selectedId);
+  if (!task) return;
+  task.myDay = task.myDay === today() ? '' : today();
+  save();
+  render();
+});
+
+// 마감일 고르기 / 지우기
+$('#due').addEventListener('change', () => {
+  const task = state.tasks.find((t) => t.id === selectedId);
+  if (!task) return;
+  task.due = $('#due').value;
+  save();
+  render();
+});
+$('#due-clear').addEventListener('click', () => {
+  const task = state.tasks.find((t) => t.id === selectedId);
+  if (!task) return;
+  task.due = '';
+  save();
+  render();
+});
+
+// 반복 고르기
+$('#repeat').addEventListener('change', () => {
+  const task = state.tasks.find((t) => t.id === selectedId);
+  if (!task) return;
+  task.repeat = $('#repeat').value;
+  task.spawned = false;  // 반복을 바꾸면 다음 완료 때 다시 새 할 일을 만든다
   save();
   render();
 });
