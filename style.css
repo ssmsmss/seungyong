@@ -52,6 +52,3 @@ button { padding: 12px 20px; border-radius: 8px; }
 #list input[type="checkbox"] { width: 22px; height: 22px; }
 
 li.done { text-decoration: line-through; color: #9ca3af; }
-
-/* 글자를 두 번 눌러 고칠 때 휴대폰이 확대되지 않게 한다 */
-#list li span { touch-action: manipulation; }
