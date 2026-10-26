@@ -63,18 +63,19 @@ function newId() {
 }
 
 // 보기 설정(지금 보는 목록, 정렬, 완료됨 펼침)은 이 브라우저에 기억한다
-let state = { lists: [], tasks: [], current: 'my-day', sort: '', doneOpen: false };
+let state = { lists: [], tasks: [], current: 'my-day', sort: '', doneOpen: false, view: 'list' };
 try {
   const view = JSON.parse(localStorage.getItem(VIEW_KEY)) || {};
   state.current = view.current || 'my-day';
   state.sort = view.sort || '';  // '' 이면 기본 순서
   state.doneOpen = !!view.doneOpen;  // 완료됨 칸이 펼쳐져 있는지 (처음에는 접혀 있다)
+  state.view = view.view === 'calendar' ? 'calendar' : 'list';  // 목록으로 볼지 달력으로 볼지
 } catch (e) {}
 let selectedId = null;  // 세부 창에 열어 둔 할 일 (저장하지 않는다)
 const $ = (selector) => document.querySelector(selector);
 
 function saveView() {
-  localStorage.setItem(VIEW_KEY, JSON.stringify({ current: state.current, sort: state.sort, doneOpen: state.doneOpen }));
+  localStorage.setItem(VIEW_KEY, JSON.stringify({ current: state.current, sort: state.sort, doneOpen: state.doneOpen, view: state.view }));
 }
 
 // ---- Supabase ----
@@ -436,6 +437,16 @@ function render() {
 
   renderSortMenu();
 
+  const calendar = state.view === 'calendar';
+  $('#list-view').hidden = calendar;
+  $('#calendar-view').hidden = !calendar;
+  $('.sort-wrap').hidden = calendar;  // 달력에서는 정렬이 필요 없다
+  $('#view-list').className = calendar ? '' : 'active';
+  $('#view-calendar').className = calendar ? 'active' : '';
+  $('#view-list').setAttribute('aria-pressed', !calendar);
+  $('#view-calendar').setAttribute('aria-pressed', calendar);
+  if (calendar) renderCalendar();
+
   $('#empty').hidden = all.length > 0;
   $('#done-title').hidden = done.length === 0;
   $('#done-count').textContent = done.length;
@@ -551,6 +562,87 @@ $('#detail-back').addEventListener('click', () => {
   render();
 });
 
+// ---- 달력 ----
+const WEEKDAYS = ['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일'];
+let calYear = new Date().getFullYear();
+let calMonth = new Date().getMonth();  // 0이 1월
+let calDay = today();  // 아래에 자세히 보여 줄 날짜
+
+function renderCalendar() {
+  const id = currentId();
+  const withDue = tasksOf(id).filter((t) => t.due);
+  const byDay = {};
+  withDue.forEach((t) => {
+    (byDay[t.due] = byDay[t.due] || []).push(t);
+  });
+
+  $('#cal-title').textContent = calYear + '년 ' + (calMonth + 1) + '월';
+
+  // 그 달 1일이 있는 주의 일요일부터 마지막 날이 있는 주의 토요일까지
+  const first = new Date(calYear, calMonth, 1);
+  const total = Math.ceil((first.getDay() + new Date(calYear, calMonth + 1, 0).getDate()) / 7) * 7;
+  $('#cal-grid').innerHTML = '';
+  for (let i = 0; i < total; i++) {
+    const date = new Date(calYear, calMonth, 1 - first.getDay() + i);
+    const text = toText(date);
+    const tasks = byDay[text] || [];
+
+    const cell = document.createElement('button');
+    cell.type = 'button';
+    cell.className = 'cal-cell'
+      + (date.getMonth() !== calMonth ? ' other' : '')
+      + (text === today() ? ' today' : '')
+      + (text === calDay ? ' selected' : '')
+      + (date.getDay() === 0 ? ' sun' : '');
+    cell.setAttribute('aria-label', (date.getMonth() + 1) + '월 ' + date.getDate() + '일, 할 일 ' + tasks.length + '개');
+
+    const num = document.createElement('span');
+    num.className = 'cal-num';
+    num.textContent = date.getDate();
+    cell.append(num);
+
+    // 넓은 화면: 제목 두 개까지 + 나머지 개수. 좁은 화면: 점으로 개수만.
+    tasks.slice(0, 2).forEach((t) => {
+      const chip = document.createElement('span');
+      chip.className = 'cal-chip' + (t.done ? ' done' : '');
+      chip.textContent = t.title;
+      cell.append(chip);
+    });
+    if (tasks.length > 2) {
+      const more = document.createElement('span');
+      more.className = 'cal-more';
+      more.textContent = '+' + (tasks.length - 2) + '개';
+      cell.append(more);
+    }
+    if (tasks.length > 0) {
+      const dots = document.createElement('span');
+      dots.className = 'cal-dots';
+      dots.textContent = tasks.length > 1 ? tasks.length + '개' : '1개';
+      if (tasks.every((t) => t.done)) dots.classList.add('done');
+      cell.append(dots);
+    }
+
+    cell.addEventListener('click', () => {
+      calDay = text;
+      calYear = date.getFullYear();
+      calMonth = date.getMonth();
+      render();
+    });
+    $('#cal-grid').append(cell);
+  }
+
+  // 고른 날의 할 일 (카드를 눌러 세부 창을 열 수 있다)
+  const day = toDate(calDay);
+  $('#day-title').textContent = (day.getMonth() + 1) + '월 ' + day.getDate() + '일 ' + WEEKDAYS[day.getDay()];
+  $('#day-list').innerHTML = '';
+  (byDay[calDay] || []).forEach((t) => $('#day-list').append(taskRow(t)));
+  $('#day-empty').hidden = (byDay[calDay] || []).length > 0;
+
+  const noDue = tasksOf(id).filter((t) => !t.due && !t.done).length;
+  $('#cal-nodue').hidden = noDue === 0;
+  $('#cal-nodue').textContent = '마감일이 없는 할 일 ' + noDue + '개는 달력에 나오지 않아요. "목록" 보기에서 볼 수 있어요.';
+}
+
 // 정렬 메뉴
 function renderSortMenu() {
   $('#sort-menu').innerHTML = '';
@@ -577,6 +669,32 @@ $('#sort').addEventListener('click', (event) => {
 });
 document.addEventListener('click', () => {
   $('#sort-menu').hidden = true;  // 다른 곳을 누르면 메뉴를 닫는다
+});
+
+// 목록 ↔ 달력 바꾸기, 달력의 달 옮기기
+$('#view-list').addEventListener('click', () => {
+  state.view = 'list';
+  saveView();
+  render();
+});
+$('#view-calendar').addEventListener('click', () => {
+  state.view = 'calendar';
+  saveView();
+  render();
+});
+function moveMonth(step) {
+  const date = new Date(calYear, calMonth + step, 1);
+  calYear = date.getFullYear();
+  calMonth = date.getMonth();
+  render();
+}
+$('#cal-prev').addEventListener('click', () => moveMonth(-1));
+$('#cal-next').addEventListener('click', () => moveMonth(1));
+$('#cal-today').addEventListener('click', () => {
+  calYear = new Date().getFullYear();
+  calMonth = new Date().getMonth();
+  calDay = today();
+  render();
 });
 
 // 완료됨 칸 접기/펴기
