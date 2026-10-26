@@ -1,7 +1,9 @@
 // 명세.md의 "왼쪽 메뉴와 내 목록" + "단계와 메모(오른쪽 세부 창)" + "마감일과 반복" + "완료됨 접기와 정렬" 부분
-// 모든 내용은 이 브라우저 안(로컬 스토리지)에만 저장한다.
+// 목록과 할 일은 Supabase(lists, todos 표)에 저장한다. 어떤 화면을 보고 있는지 같은 보기 설정만 이 브라우저에 남긴다.
 
-const KEY = 'todo-app';
+const SUPABASE_URL = 'https://soyaqfaccrmilyvwuzwa.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_an_hcxRBkaxipKIn1TUwBA_h0uL2A-l';  // 공개 키 (비밀 키가 아니다)
+const VIEW_KEY = 'todo-view';
 
 // 기본 목록: 할 일을 모아서 보여 주는 규칙만 들어 있다
 const SMART = [
@@ -60,39 +62,94 @@ function newId() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 }
 
-function load() {
-  try {
-    const saved = JSON.parse(localStorage.getItem(KEY));
-    if (saved && Array.isArray(saved.lists) && Array.isArray(saved.tasks)) return saved;
-  } catch (e) {}
-
-  // 처음 열었을 때: 기본 내 목록 "작업"을 만들고, 이전 버전에서 쓰던 할 일이 있으면 옮겨 온다
-  const first = { id: newId(), name: '작업' };
-  const fresh = { lists: [first], tasks: [], current: 'my-day' };
-  try {
-    const old = JSON.parse(localStorage.getItem('todo-items') || '[]');
-    if (Array.isArray(old)) {
-      old.forEach((o) => {
-        fresh.tasks.push({ id: newId(), listId: first.id, title: o.text, done: !!o.done, star: !!o.star, due: o.due || '', myDay: '' });
-      });
-    }
-  } catch (e) {}
-  return fresh;
-}
-
-let state = load();
-state.tasks.forEach((t) => {
-  t.steps = t.steps || [];
-  t.note = t.note || '';
-  t.repeat = t.repeat || '';
-});
-state.sort = state.sort || '';  // '' 이면 기본 순서
-state.doneOpen = !!state.doneOpen;  // 완료됨 칸이 펼쳐져 있는지 (처음에는 접혀 있다)
+// 보기 설정(지금 보는 목록, 정렬, 완료됨 펼침)은 이 브라우저에 기억한다
+let state = { lists: [], tasks: [], current: 'my-day', sort: '', doneOpen: false };
+try {
+  const view = JSON.parse(localStorage.getItem(VIEW_KEY)) || {};
+  state.current = view.current || 'my-day';
+  state.sort = view.sort || '';  // '' 이면 기본 순서
+  state.doneOpen = !!view.doneOpen;  // 완료됨 칸이 펼쳐져 있는지 (처음에는 접혀 있다)
+} catch (e) {}
 let selectedId = null;  // 세부 창에 열어 둔 할 일 (저장하지 않는다)
 const $ = (selector) => document.querySelector(selector);
 
-function save() {
-  localStorage.setItem(KEY, JSON.stringify(state));
+function saveView() {
+  localStorage.setItem(VIEW_KEY, JSON.stringify({ current: state.current, sort: state.sort, doneOpen: state.doneOpen }));
+}
+
+// ---- Supabase ----
+
+async function api(path, options) {
+  const res = await fetch(SUPABASE_URL + '/rest/v1/' + path, Object.assign({}, options, {
+    headers: Object.assign({ apikey: SUPABASE_KEY, 'Content-Type': 'application/json' }, options && options.headers),
+  }));
+  if (!res.ok) throw new Error(res.status + ' ' + (await res.text()).slice(0, 200));
+  return res.status === 204 ? null : res.json();
+}
+
+let lastAlert = 0;
+function showError(error) {
+  console.error(error);
+  if (Date.now() - lastAlert < 5000) return;  // 같은 문제로 알림이 연달아 뜨지 않게
+  lastAlert = Date.now();
+  alert('Supabase에 저장하거나 불러오지 못했어요. 인터넷 연결과 표 설정(SQL)을 확인해 주세요.\n' + error.message);
+}
+
+// 앱 안의 모양 ↔ todos 표의 칸 이름
+function toRow(task) {
+  return {
+    list_id: task.listId,
+    text: task.title,
+    done: task.done,
+    star: task.star,
+    due: task.due || null,
+    my_day: task.myDay || null,
+    repeat: task.repeat,
+    note: task.note,
+    steps: task.steps,
+    spawned: !!task.spawned,
+  };
+}
+
+function fromRow(row) {
+  return {
+    id: row.id,
+    listId: row.list_id,
+    title: row.text,
+    done: !!row.done,
+    star: !!row.star,
+    due: row.due || '',
+    myDay: row.my_day || '',
+    repeat: row.repeat || '',
+    note: row.note || '',
+    steps: row.steps || [],
+    spawned: !!row.spawned,
+  };
+}
+
+// 새 할 일을 표에 넣고, 표가 정해 준 id를 받아서 화면에 올린다
+async function insertTask(task) {
+  const rows = await api('todos', { method: 'POST', headers: { Prefer: 'return=representation' }, body: JSON.stringify(toRow(task)) });
+  const saved = fromRow(rows[0]);
+  state.tasks.push(saved);
+  return saved;
+}
+
+// 고친 할 일을 표에 반영한다 (화면은 먼저 바뀌고, 저장은 뒤에서 한다)
+function saveTask(task) {
+  api('todos?id=eq.' + encodeURIComponent(task.id), { method: 'PATCH', body: JSON.stringify(toRow(task)) }).catch(showError);
+}
+
+function removeTask(id) {
+  state.tasks = state.tasks.filter((t) => t.id !== id);
+  api('todos?id=eq.' + encodeURIComponent(id), { method: 'DELETE' }).catch(showError);
+}
+
+async function insertList(name) {
+  const rows = await api('lists', { method: 'POST', headers: { Prefer: 'return=representation' }, body: JSON.stringify({ name: name }) });
+  const list = { id: rows[0].id, name: rows[0].name };
+  state.lists.push(list);
+  return list;
 }
 
 function smartOf(id) {
@@ -147,29 +204,29 @@ function remaining(id) {
 }
 
 // 새 할 일을 어디에 넣을지: 내 목록이면 그 목록, 기본 목록이면 첫 번째 내 목록
-function defaultListId() {
-  if (state.lists.length === 0) {
-    state.lists.push({ id: newId(), name: '작업' });
-  }
+async function defaultListId() {
+  if (state.lists.length === 0) await insertList('작업');
   return state.lists[0].id;
 }
 
-function addTask(title) {
+async function addTask(title) {
   const id = currentId();
-  const task = { id: newId(), listId: smartOf(id) ? defaultListId() : id, title: title, done: false, star: false, due: '', myDay: '', steps: [], note: '', repeat: '' };
+  const task = { listId: smartOf(id) ? await defaultListId() : id, title: title, done: false, star: false, due: '', myDay: '', steps: [], note: '', repeat: '' };
   if (id === 'important') task.star = true;
   if (id === 'my-day') task.myDay = today();
   if (id === 'planned') task.due = today();
-  state.tasks.push(task);
+  await insertTask(task);
 }
 
 // 체크 누르기: 반복이 있는 할 일을 완료하면 다음 날짜로 같은 할 일이 새로 생긴다 (한 번만)
 function toggleDone(task) {
   task.done = !task.done;
-  if (task.done && task.repeat && !task.spawned) {
-    task.spawned = true;
-    state.tasks.push({
-      id: newId(),
+  const spawn = task.done && task.repeat && !task.spawned;
+  if (spawn) task.spawned = true;
+  saveTask(task);
+  render();
+  if (spawn) {
+    insertTask({
       listId: task.listId,
       title: task.title,
       done: false,
@@ -179,10 +236,8 @@ function toggleDone(task) {
       steps: task.steps.map((x) => ({ id: newId(), title: x.title, done: false })),
       note: task.note,
       repeat: task.repeat,
-    });
+    }).then(render).catch(showError);
   }
-  save();
-  render();
 }
 
 function menuItem(id, name) {
@@ -201,7 +256,7 @@ function menuItem(id, name) {
   button.addEventListener('click', () => {
     state.current = id;
     selectedId = null;
-    save();
+    saveView();
     $('#app').dataset.screen = 'tasks';  // 좁은 화면에서는 할 일 칸으로 넘어간다
     render();
   });
@@ -254,7 +309,7 @@ function taskRow(task) {
   star.setAttribute('aria-label', task.star ? '중요 표시 끄기' : '중요 표시 켜기');
   star.addEventListener('click', () => {
     task.star = !task.star;
-    save();
+    saveTask(task);
     render();
   });
 
@@ -296,7 +351,7 @@ function renderDetail() {
     check.setAttribute('aria-label', step.done ? '단계 완료 취소' : '단계 완료');
     check.addEventListener('click', () => {
       step.done = !step.done;
-      save();
+      saveTask(task);
       render();
     });
 
@@ -311,7 +366,7 @@ function renderDetail() {
     del.setAttribute('aria-label', '단계 삭제');
     del.addEventListener('click', () => {
       task.steps = task.steps.filter((x) => x.id !== step.id);
-      save();
+      saveTask(task);
       render();
     });
 
@@ -359,8 +414,10 @@ function render() {
 $('#detail-title').addEventListener('change', () => {
   const task = state.tasks.find((t) => t.id === selectedId);
   const title = $('#detail-title').value.trim();
-  if (task && title !== '') task.title = title;
-  save();
+  if (task && title !== '') {
+    task.title = title;
+    saveTask(task);
+  }
   render();
 });
 $('#detail-title').addEventListener('keydown', (event) => {
@@ -371,7 +428,7 @@ $('#detail-star').addEventListener('click', () => {
   const task = state.tasks.find((t) => t.id === selectedId);
   if (!task) return;
   task.star = !task.star;
-  save();
+  saveTask(task);
   render();
 });
 
@@ -383,7 +440,7 @@ $('#new-step').addEventListener('keydown', (event) => {
   if (!task || title === '') return;  // 빈 칸이면 멈춘다
   task.steps.push({ id: newId(), title: title, done: false });
   $('#new-step').value = '';
-  save();
+  saveTask(task);
   render();
 });
 
@@ -392,7 +449,7 @@ $('#my-day-toggle').addEventListener('click', () => {
   const task = state.tasks.find((t) => t.id === selectedId);
   if (!task) return;
   task.myDay = task.myDay === today() ? '' : today();
-  save();
+  saveTask(task);
   render();
 });
 
@@ -401,14 +458,14 @@ $('#due').addEventListener('change', () => {
   const task = state.tasks.find((t) => t.id === selectedId);
   if (!task) return;
   task.due = $('#due').value;
-  save();
+  saveTask(task);
   render();
 });
 $('#due-clear').addEventListener('click', () => {
   const task = state.tasks.find((t) => t.id === selectedId);
   if (!task) return;
   task.due = '';
-  save();
+  saveTask(task);
   render();
 });
 
@@ -418,22 +475,29 @@ $('#repeat').addEventListener('change', () => {
   if (!task) return;
   task.repeat = $('#repeat').value;
   task.spawned = false;  // 반복을 바꾸면 다음 완료 때 다시 새 할 일을 만든다
-  save();
+  saveTask(task);
   render();
 });
 
-// 메모: 적는 대로 바로 저장 (다시 그리지 않아서 글 쓰는 중에 커서가 튀지 않는다)
+// 메모: 적는 동안에는 화면만 바꾸고(커서가 튀지 않게), 잠깐 멈추거나 다른 곳을 누르면 저장한다
+let noteTimer = null;
 $('#note').addEventListener('input', () => {
   const task = state.tasks.find((t) => t.id === selectedId);
   if (!task) return;
   task.note = $('#note').value;
-  save();
+  clearTimeout(noteTimer);
+  noteTimer = setTimeout(() => saveTask(task), 500);
+});
+$('#note').addEventListener('change', () => {
+  const task = state.tasks.find((t) => t.id === selectedId);
+  if (!task) return;
+  clearTimeout(noteTimer);
+  saveTask(task);
 });
 
 $('#delete-task').addEventListener('click', () => {
-  state.tasks = state.tasks.filter((t) => t.id !== selectedId);
+  removeTask(selectedId);
   selectedId = null;
-  save();
   render();
 });
 
@@ -456,7 +520,7 @@ function renderSortMenu() {
     button.addEventListener('click', () => {
       state.sort = sort.id;
       $('#sort-menu').hidden = true;
-      save();
+      saveView();
       render();
     });
     li.append(button);
@@ -475,19 +539,20 @@ document.addEventListener('click', () => {
 // 완료됨 칸 접기/펴기
 $('#done-toggle').addEventListener('click', () => {
   state.doneOpen = !state.doneOpen;
-  save();
+  saveView();
   render();
 });
 
-// 작업 추가: Enter
+// 작업 추가: Enter (표에 들어간 뒤에 목록에 나타난다)
 $('#item').addEventListener('keydown', (event) => {
   if (event.key !== 'Enter' || event.isComposing) return;
   const title = $('#item').value.trim();
   if (title === '') return;  // 빈 칸이면 멈춘다
-  addTask(title);
   $('#item').value = '';
-  save();
-  render();
+  addTask(title).then(render).catch((error) => {
+    showError(error);
+    $('#item').value = title;  // 저장에 실패하면 적은 글을 돌려 놓는다
+  });
 });
 
 // 새 목록: Enter
@@ -495,13 +560,16 @@ $('#new-list').addEventListener('keydown', (event) => {
   if (event.key !== 'Enter' || event.isComposing) return;
   const name = $('#new-list').value.trim();
   if (name === '') return;  // 빈 칸이면 멈춘다
-  const list = { id: newId(), name: name };
-  state.lists.push(list);
-  state.current = list.id;
   $('#new-list').value = '';
-  $('#app').dataset.screen = 'tasks';
-  save();
-  render();
+  insertList(name).then((list) => {
+    state.current = list.id;
+    saveView();
+    $('#app').dataset.screen = 'tasks';
+    render();
+  }).catch((error) => {
+    showError(error);
+    $('#new-list').value = name;
+  });
 });
 
 // 내 목록 지우기: 안의 할 일도 함께 없어진다
@@ -513,9 +581,13 @@ $('#delete-list').addEventListener('click', () => {
   state.lists = state.lists.filter((l) => l.id !== id);
   state.tasks = state.tasks.filter((t) => t.listId !== id);
   state.current = 'my-day';
+  selectedId = null;
   $('#app').dataset.screen = 'menu';
-  save();
+  saveView();
   render();
+  api('todos?list_id=eq.' + encodeURIComponent(id), { method: 'DELETE' })
+    .then(() => api('lists?id=eq.' + encodeURIComponent(id), { method: 'DELETE' }))
+    .catch(showError);
 });
 
 // 좁은 화면에서 메뉴로 돌아가기
@@ -523,4 +595,19 @@ $('#back').addEventListener('click', () => {
   $('#app').dataset.screen = 'menu';
 });
 
-render();
+// 시작: 표에서 목록과 할 일을 불러온다
+async function init() {
+  try {
+    const [lists, tasks] = await Promise.all([
+      api('lists?select=*&order=created_at.asc'),
+      api('todos?select=*&order=created_at.asc'),
+    ]);
+    state.lists = lists.map((row) => ({ id: row.id, name: row.name }));
+    state.tasks = tasks.map(fromRow);
+    if (state.lists.length === 0) await insertList('작업');  // 처음 쓸 때 기본 내 목록
+  } catch (error) {
+    showError(error);
+  }
+  render();
+}
+init();
