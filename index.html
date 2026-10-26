@@ -35,37 +35,13 @@
           <button id="delete-list" type="button">목록 삭제</button>
         </div>
       </div>
-      <div class="view-toggle" role="group" aria-label="보기 방식">
-        <button id="view-list" type="button">목록</button>
-        <button id="view-calendar" type="button">달력</button>
-      </div>
-
-      <div id="list-view">
-        <input id="item" placeholder="작업 추가" aria-label="작업 추가">
-        <p id="empty">할 일이 없어요</p>
-        <ul id="list"></ul>
-        <h2 id="done-title">
-          <button id="done-toggle" type="button" aria-expanded="false"><span id="done-arrow">▸</span> 완료됨 (<span id="done-count">0</span>)</button>
-        </h2>
-        <ul id="done-list"></ul>
-      </div>
-
-      <section id="calendar-view" hidden aria-label="달력">
-        <div class="cal-head">
-          <button id="cal-prev" type="button" aria-label="이전 달">‹</button>
-          <strong id="cal-title"></strong>
-          <button id="cal-next" type="button" aria-label="다음 달">›</button>
-          <button id="cal-today" type="button">오늘</button>
-        </div>
-        <div class="cal-grid cal-weekdays">
-          <span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span>
-        </div>
-        <div id="cal-grid" class="cal-grid"></div>
-        <p id="cal-nodue" hidden></p>
-        <h2 id="day-title"></h2>
-        <ul id="day-list"></ul>
-        <p id="day-empty" hidden>이 날은 마감인 할 일이 없어요</p>
-      </section>
+      <input id="item" placeholder="작업 추가" aria-label="작업 추가">
+      <p id="empty">할 일이 없어요</p>
+      <ul id="list"></ul>
+      <h2 id="done-title">
+        <button id="done-toggle" type="button" aria-expanded="false"><span id="done-arrow">▸</span> 완료됨 (<span id="done-count">0</span>)</button>
+      </h2>
+      <ul id="done-list"></ul>
     </main>
 
     <aside class="detail" id="detail" hidden aria-label="세부 창">
