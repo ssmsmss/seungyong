@@ -25,11 +25,23 @@ button { font: inherit; color: inherit; cursor: pointer; -webkit-tap-highlight-c
 ul { list-style: none; margin: 0; padding: 0; }
 [hidden] { display: none !important; }
 
+/* 맨 위 막대: 왼쪽에 앱 아이콘과 이름 */
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--line);
+}
+.logo { display: block; width: 32px; height: 32px; }
+.brand { font-size: 20px; font-weight: 700; letter-spacing: 0.5px; }
+.brand span { color: var(--neon); }
+
 /* 두 칸 (왼쪽 메뉴 + 할 일) */
 .app {
   display: grid;
   grid-template-columns: 260px 1fr;
-  min-height: 100vh;
+  min-height: calc(100vh - 53px);
 }
 .app.has-detail { grid-template-columns: 260px 1fr 340px; }
 
@@ -74,15 +86,6 @@ input:focus, textarea:focus { outline: none; border-color: var(--neon); box-shad
   max-width: 640px;
   width: 100%;
   padding: 24px 16px;
-}
-
-#banner {
-  display: block;
-  width: 100%;
-  max-width: 240px;
-  height: auto;
-  margin-bottom: 16px;
-  border-radius: 16px;
 }
 
 .title-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
