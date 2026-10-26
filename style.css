@@ -1,140 +1,54 @@
-/* 네온 다크: 거의 검은 바탕, 얇은 선의 카드, 청록 네온 강조 하나, 숫자는 고정폭 글꼴 */
-:root {
-  --bg: #0a0a0c;
-  --card: #121216;
-  --line: #2a2a31;
-  --text: #e8e8ec;
-  --muted: #8a8a94;
-  --neon: #19f0d2;
-  --mono: ui-monospace, "SF Mono", Menlo, Consolas, "Courier New", monospace;
-}
-
-* {
-  box-sizing: border-box;
-}
-
+/* 명세 ② 예시: 청록과 흰색 · 제목은 크게 · 휴대폰에서 누르기 쉬운 버튼 · 줄 사이 넉넉하게 */
 body {
   max-width: 480px;
   margin: 0 auto;
-  padding: 32px 16px;
-  background: var(--bg);
-  color: var(--text);
-  font-family: system-ui, -apple-system, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
-  font-size: 16px;
-  line-height: 1.5;
+  padding: 24px 16px;
+  font-family: system-ui, -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  background: #ffffff;
+  color: #1f2937;
+  line-height: 1.6;
 }
 
-h1 {
-  margin: 0 0 24px;
-  font-size: 36px;
-  font-weight: 600;
-}
+h1 { font-size: 28px; color: #0f766e; }
 
-#todo-input {
+#item {
   width: 100%;
-  margin-bottom: 12px;
+  box-sizing: border-box;
   padding: 12px;
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  font: inherit;
-  color: inherit;
-  background: var(--card);
+  margin-bottom: 8px;
+  font-size: 16px;
+  border: 1px solid #99c9c4;
+  border-radius: 8px;
 }
 
-#todo-input:focus {
-  outline: none;
-  border-color: var(--neon);
-  box-shadow: 0 0 8px rgba(25, 240, 210, 0.45);
-}
+button { padding: 12px 20px; border-radius: 8px; }
 
-button {
-  padding: 10px 16px;
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  background: var(--card);
-  color: var(--text);
-  font: inherit;
-  cursor: pointer;
-}
-
-#add-button {
+#add {
   width: 100%;
-  border-color: var(--neon);
-  background: transparent;
-  color: var(--neon);
-  box-shadow: 0 0 8px rgba(25, 240, 210, 0.45);
+  font-size: 16px;
+  color: #ffffff;
+  background: #0f766e;
+  border: none;
 }
 
-#todo-list {
-  margin: 24px 0 0;
-  padding: 0;
-  list-style: none;
-}
+#list { list-style: none; padding: 0; }
 
-#todo-list li {
+#list li {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-bottom: 12px;
-  padding: 14px 16px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: var(--card);
+  padding: 12px 0;
+  border-bottom: 1px solid #e5e7eb;
 }
 
-#todo-list input[type="checkbox"] {
-  width: 20px;
-  height: 20px;
-  flex-shrink: 0;
-  accent-color: var(--neon);
+#list li button {
+  margin-left: auto;
+  padding: 8px 12px;
+  color: #0f766e;
+  background: #ffffff;
+  border: 1px solid #0f766e;
 }
 
-#todo-list span {
-  flex: 1;
-  min-width: 0;
-  overflow-wrap: anywhere;
-  font-variant-numeric: tabular-nums;
-}
+#list input[type="checkbox"] { width: 22px; height: 22px; }
 
-#todo-list button {
-  padding: 6px 12px;
-  font-size: 14px;
-  color: var(--muted);
-}
-
-button {
-  transition: background-color 0.15s, border-color 0.15s, color 0.15s;
-}
-
-/* 마우스를 올렸을 때 색이 살짝 바뀐다 (마우스가 있는 기기에서만) */
-@media (hover: hover) {
-  button:hover {
-    border-color: #4a4a55;
-    background: #1c1c22;
-    color: var(--text);
-  }
-
-  #add-button:hover {
-    background: rgba(25, 240, 210, 0.12);
-  }
-}
-
-#empty-message {
-  margin-top: 24px;
-  color: var(--muted);
-  text-align: center;
-}
-
-/* 휴대폰 폭: 손가락으로 누르기 쉽게 버튼을 키운다 */
-@media (max-width: 600px) {
-  #add-button {
-    min-height: 52px;
-    font-size: 18px;
-  }
-
-  #todo-list button {
-    min-height: 44px;
-    padding: 10px 16px;
-    font-size: 16px;
-  }
-}
+li.done { text-decoration: line-through; color: #9ca3af; }
