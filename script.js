@@ -1,4 +1,4 @@
-// 명세.md의 "왼쪽 메뉴와 내 목록" + "단계와 메모(오른쪽 세부 창)" + "마감일과 반복" 부분
+// 명세.md의 "왼쪽 메뉴와 내 목록" + "단계와 메모(오른쪽 세부 창)" + "마감일과 반복" + "완료됨 접기와 정렬" 부분
 // 모든 내용은 이 브라우저 안(로컬 스토리지)에만 저장한다.
 
 const KEY = 'todo-app';
@@ -86,6 +86,8 @@ state.tasks.forEach((t) => {
   t.note = t.note || '';
   t.repeat = t.repeat || '';
 });
+state.sort = state.sort || '';  // '' 이면 기본 순서
+state.doneOpen = !!state.doneOpen;  // 완료됨 칸이 펼쳐져 있는지 (처음에는 접혀 있다)
 let selectedId = null;  // 세부 창에 열어 둔 할 일 (저장하지 않는다)
 const $ = (selector) => document.querySelector(selector);
 
@@ -106,14 +108,38 @@ function currentId() {
   return smartOf(state.current) || listOf(state.current) ? state.current : 'my-day';
 }
 
-// 어떤 목록에 속한 할 일인지 모으기
+// 정렬 방법들 (같으면 만든 순서가 먼저)
+const SORTS = [
+  { id: 'star', name: '중요도' },
+  { id: 'due', name: '마감일' },
+  { id: 'name', name: '이름' },
+  { id: 'created', name: '만든 날짜' },
+];
+
+function byDue(a, b) {
+  if (!a.due && !b.due) return 0;
+  if (!a.due) return 1;  // 마감일 없는 것은 맨 아래
+  if (!b.due) return -1;
+  return a.due < b.due ? -1 : a.due > b.due ? 1 : 0;
+}
+
+function sortTasks(list, how) {
+  const order = new Map(state.tasks.map((t, i) => [t.id, i]));  // 만든 순서
+  const compare = {
+    star: (a, b) => Number(b.star) - Number(a.star),
+    due: byDue,
+    name: (a, b) => a.title.localeCompare(b.title, 'ko'),
+    created: () => 0,
+  }[how] || (() => 0);
+  return list.slice().sort((a, b) => compare(a, b) || order.get(a.id) - order.get(b.id));
+}
+
+// 어떤 목록에 속한 할 일인지 모으기 (정한 순서대로)
 function tasksOf(id) {
   const smart = smartOf(id);
   const found = smart ? state.tasks.filter(smart.match) : state.tasks.filter((t) => t.listId === id);
-  if (id === 'planned') {
-    return found.slice().sort((a, b) => (a.due < b.due ? -1 : a.due > b.due ? 1 : 0));  // 마감일 가까운 순
-  }
-  return found;
+  // 정렬을 고르지 않았으면 만든 순서, 계획됨만 마감일 가까운 순
+  return sortTasks(found, state.sort || (id === 'planned' ? 'due' : 'created'));
 }
 
 function remaining(id) {
@@ -316,6 +342,11 @@ function render() {
   open.forEach((t) => $('#list').append(taskRow(t)));
   $('#done-list').innerHTML = '';
   done.forEach((t) => $('#done-list').append(taskRow(t)));
+  $('#done-list').hidden = !state.doneOpen;
+  $('#done-toggle').setAttribute('aria-expanded', state.doneOpen);
+  $('#done-arrow').textContent = state.doneOpen ? '▾' : '▸';
+
+  renderSortMenu();
 
   $('#empty').hidden = all.length > 0;
   $('#done-title').hidden = done.length === 0;
@@ -410,6 +441,41 @@ $('#delete-task').addEventListener('click', () => {
 $('#detail-back').addEventListener('click', () => {
   selectedId = null;
   $('#app').dataset.screen = 'tasks';
+  render();
+});
+
+// 정렬 메뉴
+function renderSortMenu() {
+  $('#sort-menu').innerHTML = '';
+  SORTS.forEach((sort) => {
+    const li = document.createElement('li');
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'sort-item' + (state.sort === sort.id ? ' active' : '');
+    button.textContent = (state.sort === sort.id ? '✓ ' : '') + sort.name;
+    button.addEventListener('click', () => {
+      state.sort = sort.id;
+      $('#sort-menu').hidden = true;
+      save();
+      render();
+    });
+    li.append(button);
+    $('#sort-menu').append(li);
+  });
+}
+
+$('#sort').addEventListener('click', (event) => {
+  event.stopPropagation();
+  $('#sort-menu').hidden = !$('#sort-menu').hidden;
+});
+document.addEventListener('click', () => {
+  $('#sort-menu').hidden = true;  // 다른 곳을 누르면 메뉴를 닫는다
+});
+
+// 완료됨 칸 접기/펴기
+$('#done-toggle').addEventListener('click', () => {
+  state.doneOpen = !state.doneOpen;
+  save();
   render();
 });
 

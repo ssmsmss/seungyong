@@ -78,9 +78,9 @@ input:focus, textarea:focus { outline: none; border-color: var(--neon); box-shad
 
 .title-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
 h1 { margin: 0; font-size: 32px; font-weight: 600; }
-h2 { margin: 24px 0 8px; font-size: 14px; font-weight: 600; color: var(--muted); }
+h2 { margin: 24px 0 0; font-size: 14px; font-weight: 600; }
 
-#delete-list, #back {
+#delete-list, #back, #sort {
   padding: 6px 12px;
   font-size: 14px;
   color: var(--muted);
@@ -89,6 +89,40 @@ h2 { margin: 24px 0 8px; font-size: 14px; font-weight: 600; color: var(--muted);
   border-radius: 6px;
 }
 #back { display: none; margin-bottom: 12px; }
+.actions { display: flex; gap: 8px; }
+.sort-wrap { position: relative; }
+#sort-menu {
+  position: absolute;
+  right: 0;
+  z-index: 1;
+  min-width: 140px;
+  margin-top: 4px;
+  padding: 4px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+.sort-item {
+  width: 100%;
+  min-height: 40px;
+  padding: 6px 12px;
+  text-align: left;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+}
+.sort-item:hover { background: var(--bg); }
+.sort-item.active { color: var(--neon); }
+#done-toggle {
+  padding: 4px 0;
+  min-height: 36px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--muted);
+  background: none;
+  border: none;
+}
+#done-toggle:hover { color: var(--text); }
 
 #empty { margin: 24px 0; color: var(--muted); text-align: center; }
 
@@ -207,5 +241,7 @@ input[type="date"] { font-family: var(--mono); color-scheme: dark; }
   #back { display: inline-block; }
   .check { width: 32px; height: 32px; }
   .star, .del, #steps .del, #detail-star { min-height: 44px; min-width: 44px; }
-  #my-day-toggle, #due-clear { min-height: 44px; }
+  #my-day-toggle, #due-clear, #sort, #delete-list { min-height: 44px; }
+  .sort-item { min-height: 44px; }
+  #done-toggle { min-height: 44px; }
 }

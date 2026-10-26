@@ -18,12 +18,20 @@
       <button id="back" type="button">← 목록</button>
       <div class="title-row">
         <h1 id="list-title"></h1>
-        <button id="delete-list" type="button">목록 삭제</button>
+        <div class="actions">
+          <div class="sort-wrap">
+            <button id="sort" type="button" aria-haspopup="true">정렬</button>
+            <ul id="sort-menu" hidden></ul>
+          </div>
+          <button id="delete-list" type="button">목록 삭제</button>
+        </div>
       </div>
       <input id="item" placeholder="작업 추가" aria-label="작업 추가">
       <p id="empty">할 일이 없어요</p>
       <ul id="list"></ul>
-      <h2 id="done-title">완료됨 (<span id="done-count">0</span>)</h2>
+      <h2 id="done-title">
+        <button id="done-toggle" type="button" aria-expanded="false"><span id="done-arrow">▸</span> 완료됨 (<span id="done-count">0</span>)</button>
+      </h2>
       <ul id="done-list"></ul>
     </main>
 
