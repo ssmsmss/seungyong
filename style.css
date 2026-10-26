@@ -150,7 +150,8 @@ button.title {
 }
 .tasks li.selected { border-color: var(--neon); }
 .memo {
-  flex: 0 0 100%;
+  flex: 0 0 auto;
+  width: calc(100% - 40px);
   margin: 0 0 4px 40px;
   font-size: 14px;
   color: var(--muted);
@@ -254,7 +255,7 @@ input[type="date"] { font-family: var(--mono); color-scheme: dark; }
   #detail-back { display: inline-block; }
   #back { display: inline-block; }
   .check { width: 32px; height: 32px; }
-  .memo { margin-left: 44px; }
+  .memo { width: calc(100% - 44px); margin-left: 44px; }
   .star, .del, #steps .del, #detail-star { min-height: 44px; min-width: 44px; }
   #my-day-toggle, #due-clear, #sort, #delete-list { min-height: 44px; }
   .sort-item { min-height: 44px; }
