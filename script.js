@@ -19,8 +19,15 @@ let hideDone = false;  // true면 완료한 할 일을 목록에서 숨긴다
 function render() {
   const list = document.querySelector('#list');
   list.innerHTML = '';
-  // 별표 단 것을 맨 위로 보낸다. 저장된 순서는 그대로 두고 그리는 순서만 바꾼다.
-  const order = items.map((item, i) => i).sort((a, b) => Number(!!items[b].star) - Number(!!items[a].star) || a - b);
+  // 순서: 별표 단 것 → 마감일이 가까운 것 → 마감일 없는 것(추가한 순서). 저장된 순서는 그대로 두고 그리는 순서만 바꾼다.
+  const byDue = (a, b) => {
+    if (!a.due && !b.due) return 0;
+    if (!a.due) return 1;
+    if (!b.due) return -1;
+    return a.due < b.due ? -1 : a.due > b.due ? 1 : 0;  // 2026-10-30처럼 쓴 날짜는 글자 순서가 곧 날짜 순서다
+  };
+  const order = items.map((item, i) => i).sort((a, b) =>
+    Number(!!items[b].star) - Number(!!items[a].star) || byDue(items[a], items[b]) || a - b);
   order.forEach((i) => {
     const item = items[i];
     if (hideDone && item.done) return;  // 숨기는 중이면 그리지 않는다 (i는 그대로라 체크·삭제는 맞는 항목에 적용된다)
