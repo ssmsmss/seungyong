@@ -254,7 +254,7 @@ function menuItem(id, name) {
   const li = document.createElement('li');
   const button = document.createElement('button');
   button.type = 'button';
-  button.className = 'menu-item' + (id === currentId() ? ' active' : '');
+  button.className = 'menu-item' + (id === currentId() && state.view !== 'calendar' ? ' active' : '');
   button.dataset.list = smartOf(id) ? id : 'mine';
 
   const icon = document.createElement('span');
@@ -272,6 +272,7 @@ function menuItem(id, name) {
   button.append(label, count);
   button.addEventListener('click', () => {
     state.current = id;
+    state.view = 'list';  // 메뉴에서 목록을 고르면 그 목록을 목록 보기로 연다
     selectedId = null;
     saveView();
     $('#app').dataset.screen = 'tasks';  // 좁은 화면에서는 할 일 칸으로 넘어간다
@@ -281,7 +282,7 @@ function menuItem(id, name) {
   return li;
 }
 
-function taskRow(task) {
+function taskRow(task, showList) {
   const li = document.createElement('li');
   li.className = (task.done ? 'done' : '') + (task.id === selectedId ? ' selected' : '');
 
@@ -315,6 +316,13 @@ function taskRow(task) {
     progress.className = 'due';
     progress.textContent = '단계 ' + task.steps.filter((x) => x.done).length + '/' + task.steps.length;
     li.append(progress);
+  }
+
+  if (showList && listOf(task.listId)) {
+    const tag = document.createElement('span');
+    tag.className = 'due';
+    tag.textContent = listOf(task.listId).name;  // 달력에서는 어느 목록의 할 일인지 보여 준다
+    li.append(tag);
   }
 
   if (task.due) {
@@ -417,11 +425,14 @@ function render() {
 
   // 가운데: 제목과 할 일
   const smart = smartOf(id);
-  $('#list-title').textContent = smart ? smart.name : listOf(id).name;
-  $('#delete-list').hidden = !!smart;  // 기본 목록은 지울 수 없다
-  // 오늘 하루에서는 제목 아래에 오늘 날짜를 보여 준다
-  $('#list-sub').hidden = id !== 'my-day';
-  $('#list-sub').textContent = new Date().toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'long' });
+  const calendar = state.view === 'calendar';
+  $('#list-title').textContent = calendar ? '달력' : smart ? smart.name : listOf(id).name;
+  $('#delete-list').hidden = calendar || !!smart;  // 기본 목록은 지울 수 없다
+  // 오늘 하루에서는 제목 아래에 오늘 날짜, 달력에서는 안내 글
+  $('#list-sub').hidden = !calendar && id !== 'my-day';
+  $('#list-sub').textContent = calendar
+    ? '모든 목록의 할 일이 마감일에 맞춰 모여 있어요'
+    : new Date().toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'long' });
 
   const all = tasksOf(id);
   const open = all.filter((t) => !t.done);
@@ -437,7 +448,6 @@ function render() {
 
   renderSortMenu();
 
-  const calendar = state.view === 'calendar';
   $('#list-view').hidden = calendar;
   $('#calendar-view').hidden = !calendar;
   $('.sort-wrap').hidden = calendar;  // 달력에서는 정렬이 필요 없다
@@ -569,8 +579,8 @@ let calMonth = new Date().getMonth();  // 0이 1월
 let calDay = today();  // 아래에 자세히 보여 줄 날짜
 
 function renderCalendar() {
-  const id = currentId();
-  const withDue = tasksOf(id).filter((t) => t.due);
+  // 달력은 어느 목록을 보고 있든 상관없이 모든 목록의 할 일을 한곳에 모아 보여 준다
+  const withDue = state.tasks.filter((t) => t.due);
   const byDay = {};
   withDue.forEach((t) => {
     (byDay[t.due] = byDay[t.due] || []).push(t);
@@ -635,10 +645,10 @@ function renderCalendar() {
   const day = toDate(calDay);
   $('#day-title').textContent = (day.getMonth() + 1) + '월 ' + day.getDate() + '일 ' + WEEKDAYS[day.getDay()];
   $('#day-list').innerHTML = '';
-  (byDay[calDay] || []).forEach((t) => $('#day-list').append(taskRow(t)));
+  (byDay[calDay] || []).forEach((t) => $('#day-list').append(taskRow(t, true)));
   $('#day-empty').hidden = (byDay[calDay] || []).length > 0;
 
-  const noDue = tasksOf(id).filter((t) => !t.due && !t.done).length;
+  const noDue = state.tasks.filter((t) => !t.due && !t.done).length;
   $('#cal-nodue').hidden = noDue === 0;
   $('#cal-nodue').textContent = '마감일이 없는 할 일 ' + noDue + '개는 달력에 나오지 않아요. "목록" 보기에서 볼 수 있어요.';
 }
