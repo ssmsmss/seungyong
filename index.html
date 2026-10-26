@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>오늘 할 일</title>
+</head>
+<body>
+  <h1>오늘 할 일</h1>
+
+  <input type="text" id="todo-input" aria-label="할 일 적는 칸">
+  <button type="button" id="add-button">추가</button>
+
+  <ul id="todo-list">
+    <li>
+      <input type="checkbox" aria-label="완료">
+      <span>예시 할 일</span>
+      <button type="button">삭제</button>
+    </li>
+  </ul>
+
+  <p id="empty-message" hidden>아직 할 일이 없어요</p>
+</body>
+</html>
